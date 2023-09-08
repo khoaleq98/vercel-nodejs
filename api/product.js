@@ -1,21 +1,60 @@
 const express = require("express");
 const router = express.Router();
+const  credentials = require('./credentials.json')
+const { google } = require("googleapis");
+
 
 /**
  * GET product list.
  *
  * @return product list | empty.
  */
+
+const readData = async () => {
+
+  const auth = new google.auth.GoogleAuth({
+    credentials,
+    scopes: "https://www.googleapis.com/auth/spreadsheets",
+  });
+
+  // Create client instance for auth
+  const client = await auth.getClient();
+
+  // Instance of Google Sheets API
+  const googleSheets = google.sheets({ version: "v4", auth: client });
+  const spreadsheetId = "16TYKzK1K4y-zZInyxBzGmzKXao0bPYBNbJ8qH5zbiPs"; //read
+
+  const metaData = await googleSheets.spreadsheets.get({
+    auth,
+    spreadsheetId,
+  });
+  const sheetName = metaData.data.properties.title;
+  // Read rows from spreadsheet
+  const getRows = await googleSheets.spreadsheets.values.get({
+    auth,
+    spreadsheetId,
+    range: "Sheet1",
+  });
+  return {
+    rows: getRows.data.values,
+    sheetName,
+  };
+}
+
 router.get("/", async (req, res) => {
   try {
+    const {rows, sheetName} = await readData()
     res.json({
-      status: 200,
-      message: "Get data has successfully",
+      rows,
+      sheetName,
     });
   } catch (error) {
     console.error(error);
     return res.status(500).send("Server error");
   }
 });
+
+
+
 
 module.exports = router;
