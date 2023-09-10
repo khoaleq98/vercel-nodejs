@@ -35,7 +35,7 @@ router.get("/", async (req, res) => {
         'Access-Control-Allow-Headers',
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
-    const { phone, name, company, email } = req.query;
+    const { phone, name, company, email, customerId } = req.query;
     // Write row(s) to spreadsheet
     const spreadsheetId =  '1cpoR986WLMyMRhPsYuGvZ3J9q7oYZmiGBNspci428DE' // write;
     await googleSheets.spreadsheets.values.append({
@@ -44,7 +44,7 @@ router.get("/", async (req, res) => {
       range: "Sheet1",
       valueInputOption: "USER_ENTERED",
       resource: {
-        values: [[ name , company , email, phone]],
+        values: [[ name , company , email, phone, customerId]],
       },
     });
 
