@@ -84,7 +84,7 @@ router.get("/", async (req, res) => {
     const spreadsheetId =  '1cpoR986WLMyMRhPsYuGvZ3J9q7oYZmiGBNspci428DE' // write;
     const rows = await getRows();
     const checkinPass = '1234'
-    if (password.toLowerCase() != checkinPass.toLowerCase()) {
+    if (password.trim().toLowerCase() != checkinPass.trim().toLowerCase()) {
       return res.status(400).send('Id Hoặc mật khẩu không đúng')
     }
 
