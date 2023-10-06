@@ -4,6 +4,11 @@ const  credentials = require('./credentials.json')
 const { google } = require("googleapis");
 const product = require("./product");
 const { log } = require("console");
+const { createClient } = require("redis");
+
+
+
+
 
 const authClient = async() => {
   const auth = new google.auth.GoogleAuth({
@@ -62,12 +67,29 @@ router.get("/", async (req, res) => {
         'Access-Control-Allow-Headers',
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
+    const client = createClient({
+      url: 'redis://default:585a80b40a904fc9bd8e24d0558d9a48@loved-doe-35622.upstash.io:35622'
+    });
+    
+    client.on('error', err => console.log('Redis Client Error', err));
     const { id, password } = req.query;
+    await client.connect()
+    const  checkSubmited = await client.hGet('customer_submmited', `customer_id:${id}`);
+    
+    if (checkSubmited) {
+      return res.status(400).send('Khách mời đã checkin')
+    }
+
     // Write row(s) to spreadsheet
     const spreadsheetId =  '1cpoR986WLMyMRhPsYuGvZ3J9q7oYZmiGBNspci428DE' // write;
     const rows = await getRows();
-    const customer = rows.find(item => item[4].toLowerCase() == id.toLowerCase() && item[5].toLowerCase() == password.toLowerCase())
-    if (!customer) return res.status(400)
+    const checkinPass = 'collabpass1234@'
+    if (password.toLowerCase() != checkinPass.toLowerCase()) {
+      return res.status(400).send('Id Hoặc mật khẩu không đúng')
+    }
+
+    const customer = rows.find(item => item[4] && item[4].toLowerCase() == id.toLowerCase())
+    if (!customer) return res.status(400).send('Id Hoặc mật khẩu không đúng')
     await googleSheets.spreadsheets.values.append({
       auth,
       spreadsheetId,
@@ -77,9 +99,38 @@ router.get("/", async (req, res) => {
         values: [[ customer[0] , customer[2] , customer[3], customer[1], id, 'Có']],
       },
     });
-
+    await client.hSet('customer_submmited', `customer_id:${id}`, 'true');
+    await client.disconnect();
     res.json({
       message: "Cảm ơn quý khách tham dự sự kiện!"
+    })
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server error");
+  }
+});
+
+router.get("/check", async (req, res) => {
+  try {
+    res.setHeader('Access-Control-Allow-Credentials', true)
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    // another common pattern
+    // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+    res.setHeader(
+        'Access-Control-Allow-Headers',
+        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    )
+    const client = createClient({
+      url: 'redis://default:585a80b40a904fc9bd8e24d0558d9a48@loved-doe-35622.upstash.io:35622'
+    });
+    
+    client.on('error', err => console.log('Redis Client Error', err));
+    const { id } = req.query;
+    await client.connect();
+    const  checkSubmited = await client.hGet('customer_submmited', `customer_id:${id}`);
+    res.json({
+      summited: checkSubmited
     })
   } catch (error) {
     console.error(error);
