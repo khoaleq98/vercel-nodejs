@@ -85,6 +85,7 @@ router.get("/", async (req, res) => {
     const rows = await getRows();
     const checkinPass = '1234'
     if (password.trim().toLowerCase() != checkinPass.trim().toLowerCase()) {
+      console.log('password in valid: user id: ', id)
       return res.status(400).send('Id Hoặc mật khẩu không đúng')
     }
 
