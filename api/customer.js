@@ -83,7 +83,7 @@ router.get("/", async (req, res) => {
     // Write row(s) to spreadsheet
     const spreadsheetId =  '1cpoR986WLMyMRhPsYuGvZ3J9q7oYZmiGBNspci428DE' // write;
     const rows = await getRows();
-    const checkinPass = 'collabpass1234@'
+    const checkinPass = '1234'
     if (password.toLowerCase() != checkinPass.toLowerCase()) {
       return res.status(400).send('Id Hoặc mật khẩu không đúng')
     }
