@@ -67,18 +67,18 @@ router.get("/", async (req, res) => {
         'Access-Control-Allow-Headers',
         'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
-    const client = createClient({
-      url: 'redis://default:585a80b40a904fc9bd8e24d0558d9a48@loved-doe-35622.upstash.io:35622'
-    });
+    // const client = createClient({
+    //   url: 'redis://default:585a80b40a904fc9bd8e24d0558d9a48@loved-doe-35622.upstash.io:35622'
+    // });
     
-    client.on('error', err => console.log('Redis Client Error', err));
+    // client.on('error', err => console.log('Redis Client Error', err));
     const { id, password } = req.query;
-    await client.connect()
-    const  checkSubmited = await client.hGet('customer_submmited', `customer_id:${id}`);
+    // await client.connect()
+    // const  checkSubmited = await client.hGet('customer_submmited', `customer_id:${id}`);
     
-    if (checkSubmited) {
-      return res.status(400).send('Khách mời đã checkin')
-    }
+    // if (checkSubmited) {
+    //   return res.status(400).send('Khách mời đã checkin')
+    // }
 
     // Write row(s) to spreadsheet
     const spreadsheetId =  '1cpoR986WLMyMRhPsYuGvZ3J9q7oYZmiGBNspci428DE' // write;
@@ -100,8 +100,8 @@ router.get("/", async (req, res) => {
         values: [[ customer[0] , customer[2] , customer[3], customer[1], id, 'Có']],
       },
     });
-    await client.hSet('customer_submmited', `customer_id:${id}`, 'true');
-    await client.disconnect();
+    // await client.hSet('customer_submmited', `customer_id:${id}`, 'true');
+    // await client.disconnect();
     res.json({
       message: "Cảm ơn quý khách tham dự sự kiện!"
     })
