@@ -90,8 +90,8 @@ router.get("/detail", async (req, res) => {
     if (!customerData || !customerData.length) {
       await readData()
     }
-    console.log(customerData[0].id)
     customer = customerData.find(item => item.id == id)
+    console.log({customer})
     res.json({
       customer
     })
