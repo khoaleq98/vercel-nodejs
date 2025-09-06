@@ -33,7 +33,8 @@ const readData = async () => {
     range: "Sheet1",
   });
   const rows = getRows.data.values
-  for (const row of rows) {
+  if (!customerData.length) {
+    for (const row of rows) {
     customerData = [...customerData, ...[{
       id: row[4],
       pre_name: row[0],
@@ -44,6 +45,7 @@ const readData = async () => {
     ]
   }
   console.log("Save data: ", customerData.length)
+  }
   return {
     rows: getRows.data.values,
     sheetName,
