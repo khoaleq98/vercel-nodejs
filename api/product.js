@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const  credentials = require('./credentials.json')
+const credentials = require('./credentials.json')
 const { google } = require("googleapis");
 
 /**
@@ -8,6 +8,7 @@ const { google } = require("googleapis");
  *
  * @return product list | empty.
  */
+let customerData = [];
 
 const readData = async () => {
   const auth = new google.auth.GoogleAuth({
@@ -31,6 +32,18 @@ const readData = async () => {
     spreadsheetId,
     range: "Sheet1",
   });
+  const rows = getRows.data.values
+  for (const row of rows) {
+    customerData = [...customerData, ...[{
+      id: row[4],
+      pre_name: row[0],
+      name: row[1],
+      company: row[2],
+      level: row[3]
+    }]
+    ]
+  }
+  console.log("Save data: ", customerData.length)
   return {
     rows: getRows.data.values,
     sheetName,
@@ -39,20 +52,47 @@ const readData = async () => {
 
 router.get("/", async (req, res) => {
   try {
-    const {rows, sheetName} = await readData()
+    const { rows, sheetName } = await readData()
     res.setHeader('Access-Control-Allow-Credentials', true)
     res.setHeader('Access-Control-Allow-Origin', '*')
     // another common pattern
     // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
     res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
     res.json({
       rows,
       sheetName,
     });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).send("Server error");
+  }
+});
+
+router.get("/detail", async (req, res) => {
+  try {
+    res.setHeader('Access-Control-Allow-Credentials', true)
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    // another common pattern
+    // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+    )
+    const { id } = req.query;
+    console.log({id})
+    if (!customerData || !customerData.length) {
+      await readData()
+    }
+    console.log(customerData[0].id)
+    customer = customerData.find(item => item.id == id)
+    res.json({
+      customer
+    })
   } catch (error) {
     console.error(error);
     return res.status(500).send("Server error");
