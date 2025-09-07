@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const credentials = require('./credentials.json')
 const { google } = require("googleapis");
+const client = require('@upstash/redis')
+
 
 /**
  * GET product list.
@@ -96,11 +98,24 @@ router.get("/detail", async (req, res) => {
     )
     const { id } = req.query;
     console.log({ id })
+
+    const redis = new client.Redis({
+      url: 'https://clear-lamprey-25211.upstash.io',
+      token: 'AWJ7AAIncDEzZDUzNjNkOGQyYmU0MmVmYWQwZWI4ZWQxNjY4YjgyNHAxMjUyMTE',
+    })
+
+    const checkSubmited = await redis.hget('customer_submmited', `customer_id:${id}`);
+
+    // if (checkSubmited) {
+    //   return res.status(400).send('Khách mời đã checkin')
+    // }
     if (!customerData || !customerData.length) {
       await readData()
     }
+
     customer = customerData.find(item => item.id == id)
     console.log({ customer })
+    customer.status = checkSubmited ? "CHECKIN" : "VẮNG"
     res.json({
       customer
     })
