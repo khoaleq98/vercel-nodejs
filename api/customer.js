@@ -1,16 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const  credentials = require('./credentials.json')
+const credentials = require('./credentials.json')
 const { google } = require("googleapis");
 const product = require("./product");
 const { log } = require("console");
 const { createClient } = require("redis");
 
+let customerData  = [];
 
 
-
-
-const authClient = async() => {
+const authClient = async () => {
   const auth = new google.auth.GoogleAuth({
     credentials,
     scopes: "https://www.googleapis.com/auth/spreadsheets",
@@ -49,14 +48,28 @@ const getRows = async () => {
     spreadsheetId,
     range: "Sheet1",
   });
-  return getRows.data.values
+  const rows = getRows.data.values
+  if (!customerData.length) {
+    for (const row of rows) {
+      customerData = [...customerData, ...[{
+        id: row[4],
+        pre_name: row[0],
+        name: row[1],
+        company: row[2],
+        level: row[3]
+      }]
+      ]
+    }
+  }
+  console.log("Save data: ", customerData.length)
+  return rows
 }
 
 router.get("/", async (req, res) => {
   const {
     googleSheets,
     auth
-  }= await authClient();
+  } = await authClient();
   try {
     res.setHeader('Access-Control-Allow-Credentials', true)
     res.setHeader('Access-Control-Allow-Origin', '*')
@@ -64,40 +77,42 @@ router.get("/", async (req, res) => {
     // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
     res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
     // const client = createClient({
     //   url: 'redis://default:585a80b40a904fc9bd8e24d0558d9a48@loved-doe-35622.upstash.io:35622'
     // });
-    
+
     // client.on('error', err => console.log('Redis Client Error', err));
-    const { id, password } = req.query;
+    let { id, password } = req.query;
     // await client.connect()
     // const  checkSubmited = await client.hGet('customer_submmited', `customer_id:${id}`);
-    
+
     // if (checkSubmited) {
     //   return res.status(400).send('Khách mời đã checkin')
     // }
 
     // Write row(s) to spreadsheet
-    const spreadsheetId =  '1WuNzHrE9B4UIgtx5jLpcYyYMo_XyoRZVqL_lNv46ehQ' // write;
-    const rows = await getRows();
+    const spreadsheetId = '1WuNzHrE9B4UIgtx5jLpcYyYMo_XyoRZVqL_lNv46ehQ' // write;
+    if (!customerData.length) {
+        await getRows();
+    }
     const checkinPass = 'ademax_event'
     if (password.trim().toLowerCase() != checkinPass.trim().toLowerCase()) {
       console.log('password in valid: user id: ', id)
       return res.status(400).send('Id Hoặc mật khẩu không đúng')
     }
 
-    const customer = rows.find(item => item[4] && item[4].toLowerCase() == id.toLowerCase())
-    if (!customer) return res.status(400).send('Id Hoặc mật khẩu không đúng')
+    const customer = customerData.find(item => item.id.toLowerCase() == id.trim().toLowerCase())
+    if (!customer) return res.status(400).send('Id không đúng')
     await googleSheets.spreadsheets.values.append({
       auth,
       spreadsheetId,
       range: "Sheet1",
       valueInputOption: "USER_ENTERED",
       resource: {
-        values: [[ customer[0], customer[1]  , customer[3], customer[2] , id, 'Có']],
+        values: [[customer.pre_name, customer.name, customer.level, customer.company, id, 'Có']],
       },
     });
     // await client.hSet('customer_submmited', `customer_id:${id}`, 'true');
@@ -119,17 +134,17 @@ router.get("/check", async (req, res) => {
     // res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
     res.setHeader(
-        'Access-Control-Allow-Headers',
-        'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
+      'Access-Control-Allow-Headers',
+      'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
     const client = createClient({
       url: 'redis://default:585a80b40a904fc9bd8e24d0558d9a48@loved-doe-35622.upstash.io:35622'
     });
-    
+
     client.on('error', err => console.log('Redis Client Error', err));
     const { id } = req.query;
     await client.connect();
-    const  checkSubmited = await client.hGet('customer_submmited', `customer_id:${id}`);
+    const checkSubmited = await client.hGet('customer_submmited', `customer_id:${id}`);
     res.json({
       summited: checkSubmited
     })
