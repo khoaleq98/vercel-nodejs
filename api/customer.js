@@ -37,7 +37,7 @@ const getRows = async () => {
 
   // Instance of Google Sheets API
   const googleSheets = google.sheets({ version: "v4", auth: client });
-  const spreadsheetId = "16TYKzK1K4y-zZInyxBzGmzKXao0bPYBNbJ8qH5zbiPs"; //read
+  const spreadsheetId = "1ZGE0jKyH5F-Z5vDSKzqo_e9eM4z6PDzkohI1MMly5to"; //read
   const metaData = await googleSheets.spreadsheets.get({
     auth,
     spreadsheetId,
@@ -81,9 +81,9 @@ router.get("/", async (req, res) => {
     // }
 
     // Write row(s) to spreadsheet
-    const spreadsheetId =  '1cpoR986WLMyMRhPsYuGvZ3J9q7oYZmiGBNspci428DE' // write;
+    const spreadsheetId =  '1WuNzHrE9B4UIgtx5jLpcYyYMo_XyoRZVqL_lNv46ehQ' // write;
     const rows = await getRows();
-    const checkinPass = '1234'
+    const checkinPass = 'ademax_event'
     if (password.trim().toLowerCase() != checkinPass.trim().toLowerCase()) {
       console.log('password in valid: user id: ', id)
       return res.status(400).send('Id Hoặc mật khẩu không đúng')
@@ -97,7 +97,7 @@ router.get("/", async (req, res) => {
       range: "Sheet1",
       valueInputOption: "USER_ENTERED",
       resource: {
-        values: [[ customer[0] , customer[2] , customer[3], customer[1], id, 'Có']],
+        values: [[ customer[0], customer[1]  , customer[3], customer[2] , id, 'Có']],
       },
     });
     // await client.hSet('customer_submmited', `customer_id:${id}`, 'true');
