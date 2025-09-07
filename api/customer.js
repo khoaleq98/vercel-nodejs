@@ -8,7 +8,7 @@ const { createClient } = require("redis");
 const client = require('@upstash/redis')
 
 
-let customerData  = [];
+let customerData = [];
 
 
 const authClient = async () => {
@@ -52,15 +52,19 @@ const getRows = async () => {
   });
   const rows = getRows.data.values
   if (!customerData.length) {
+    let index = 1
     for (const row of rows) {
       customerData = [...customerData, ...[{
         id: row[4],
         pre_name: row[0],
         name: row[1],
         company: row[2],
-        level: row[3]
+        level: row[3],
+        status: row[5],
+        row_index: index
       }]
       ]
+      index++;
     }
   }
   console.log("Save data: ", customerData.length)
@@ -82,22 +86,23 @@ router.get("/", async (req, res) => {
       'Access-Control-Allow-Headers',
       'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
-  const redis = new client.Redis({
-    url: 'https://clear-lamprey-25211.upstash.io',
-    token: 'AWJ7AAIncDEzZDUzNjNkOGQyYmU0MmVmYWQwZWI4ZWQxNjY4YjgyNHAxMjUyMTE',
-  })
+    const redis = new client.Redis({
+      url: 'https://clear-lamprey-25211.upstash.io',
+      token: 'AWJ7AAIncDEzZDUzNjNkOGQyYmU0MmVmYWQwZWI4ZWQxNjY4YjgyNHAxMjUyMTE',
+    })
 
     let { id, password } = req.query;
-    const  checkSubmited = await redis.hget('customer_submmited', `customer_id:${id}`);
+    const checkSubmited = await redis.hget('customer_submmited', `customer_id:${id}`);
 
     if (checkSubmited) {
       return res.status(400).send('Khách mời đã checkin')
     }
 
     // Write row(s) to spreadsheet
-    const spreadsheetId = '1WuNzHrE9B4UIgtx5jLpcYyYMo_XyoRZVqL_lNv46ehQ' // write;
+    // const spreadsheetId = '1WuNzHrE9B4UIgtx5jLpcYyYMo_XyoRZVqL_lNv46ehQ' // write;
+    const spreadsheetId = "1ZGE0jKyH5F-Z5vDSKzqo_e9eM4z6PDzkohI1MMly5to"; //Update
     if (!customerData.length) {
-        await getRows();
+      await getRows();
     }
     const checkinPass = 'ademax_event'
     if (password.trim().toLowerCase() != checkinPass.trim().toLowerCase()) {
@@ -107,15 +112,31 @@ router.get("/", async (req, res) => {
 
     const customer = customerData.find(item => item.id.toLowerCase() == id.trim().toLowerCase())
     if (!customer) return res.status(400).send('Id không đúng')
-    await googleSheets.spreadsheets.values.append({
-      auth,
+
+    const range = `Sheet1!F${customer.row_index}:H${customer.row_index}`; // row to update
+    //update -+----------------
+    const values = [
+      ["ĐÃ CHECKIN", new Date().toLocaleString('en-GB', { timeZone: 'Asia/Ho_Chi_Minh' })],
+    ];
+
+    const resource = { values };
+
+    const result = await googleSheets.spreadsheets.values.update({
       spreadsheetId,
-      range: "Sheet1",
-      valueInputOption: "USER_ENTERED",
-      resource: {
-        values: [[customer.pre_name, customer.name, customer.level, customer.company, id, 'Có']],
-      },
+      range,
+      valueInputOption: "RAW",
+      resource,
     });
+    //update -+----------------
+    // await googleSheets.spreadsheets.values.append({
+    //   auth,
+    //   spreadsheetId,
+    //   range: "Sheet1",
+    //   valueInputOption: "USER_ENTERED",
+    //   resource: {
+    //     values: [[customer.pre_name, customer.name, customer.level, customer.company, id, 'Có']],
+    //   },
+    // });
     await redis.hset('customer_submmited', {
       [`customer_id:${id}`]: '1'
     });

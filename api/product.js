@@ -35,16 +35,21 @@ const readData = async () => {
   const rows = getRows.data.values
   if (!customerData.length) {
     for (const row of rows) {
-    customerData = [...customerData, ...[{
-      id: row[4],
-      pre_name: row[0],
-      name: row[1],
-      company: row[2],
-      level: row[3]
-    }]
-    ]
-  }
-  console.log("Save data: ", customerData.length)
+      let index = 1
+
+      customerData = [...customerData, ...[{
+        id: row[4],
+        pre_name: row[0],
+        name: row[1],
+        company: row[2],
+        level: row[3],
+        status: row[5],
+        row_index: index
+      }]
+      ]
+      index++;
+    }
+    console.log("Save data: ", customerData.length)
   }
   return {
     rows: getRows.data.values,
@@ -86,12 +91,12 @@ router.get("/detail", async (req, res) => {
       'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
     const { id } = req.query;
-    console.log({id})
+    console.log({ id })
     if (!customerData || !customerData.length) {
       await readData()
     }
     customer = customerData.find(item => item.id == id)
-    console.log({customer})
+    console.log({ customer })
     res.json({
       customer
     })
