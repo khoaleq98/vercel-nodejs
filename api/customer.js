@@ -5,6 +5,8 @@ const { google } = require("googleapis");
 const product = require("./product");
 const { log } = require("console");
 const { createClient } = require("redis");
+const client = require('@upstash/redis')
+
 
 let customerData  = [];
 
@@ -80,18 +82,17 @@ router.get("/", async (req, res) => {
       'Access-Control-Allow-Headers',
       'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version'
     )
-    // const client = createClient({
-    //   url: 'redis://default:585a80b40a904fc9bd8e24d0558d9a48@loved-doe-35622.upstash.io:35622'
-    // });
+  const redis = new client.Redis({
+    url: 'https://clear-lamprey-25211.upstash.io',
+    token: 'AWJ7AAIncDEzZDUzNjNkOGQyYmU0MmVmYWQwZWI4ZWQxNjY4YjgyNHAxMjUyMTE',
+  })
 
-    // client.on('error', err => console.log('Redis Client Error', err));
     let { id, password } = req.query;
-    // await client.connect()
-    // const  checkSubmited = await client.hGet('customer_submmited', `customer_id:${id}`);
+    const  checkSubmited = await redis.hget('customer_submmited', `customer_id:${id}`);
 
-    // if (checkSubmited) {
-    //   return res.status(400).send('Khách mời đã checkin')
-    // }
+    if (checkSubmited) {
+      return res.status(400).send('Khách mời đã checkin')
+    }
 
     // Write row(s) to spreadsheet
     const spreadsheetId = '1WuNzHrE9B4UIgtx5jLpcYyYMo_XyoRZVqL_lNv46ehQ' // write;
@@ -115,7 +116,9 @@ router.get("/", async (req, res) => {
         values: [[customer.pre_name, customer.name, customer.level, customer.company, id, 'Có']],
       },
     });
-    // await client.hSet('customer_submmited', `customer_id:${id}`, 'true');
+    await redis.hset('customer_submmited', {
+      [`customer_id:${id}`]: '1'
+    });
     // await client.disconnect();
     res.json({
       message: "Cảm ơn quý khách tham dự sự kiện!"
