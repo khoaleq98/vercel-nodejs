@@ -33,24 +33,28 @@ const readData = async () => {
     range: "Sheet1",
   });
   const rows = getRows.data.values
-  if (!customerData.length) {
-    for (const row of rows) {
-      let index = 1
+  // if (!customerData.length) {
 
-      customerData = [...customerData, ...[{
-        id: row[4],
-        pre_name: row[0],
-        name: row[1],
-        company: row[2],
-        level: row[3],
-        status: row[5],
-        row_index: index
-      }]
-      ]
-      index++;
-    }
-    console.log("Save data: ", customerData.length)
+  // }
+  customerData = []
+  for (const row of rows) {
+    let index = 1
+
+    customerData = [...customerData, ...[{
+      id: row[4],
+      pre_name: row[0],
+      name: row[1],
+      company: row[2],
+      level: row[3],
+      status: row[5],
+      row_index: index
+    }]
+    ]
+    index++;
   }
+  console.log("Save data: ", customerData.length)
+
+
   return {
     rows: getRows.data.values,
     sheetName,
