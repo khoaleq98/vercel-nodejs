@@ -22,7 +22,7 @@ const readData = async () => {
 
   // Instance of Google Sheets API
   const googleSheets = google.sheets({ version: "v4", auth: client });
-  const spreadsheetId = "1ZGE0jKyH5F-Z5vDSKzqo_e9eM4z6PDzkohI1MMly5to"; //read
+  const spreadsheetId = "13qsJQfZKObMCXk5SVcoty8jl6dp3M5puYhsUKn2YvmE"; //read
   const metaData = await googleSheets.spreadsheets.get({
     auth,
     spreadsheetId,

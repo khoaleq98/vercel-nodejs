@@ -38,7 +38,7 @@ const getRows = async () => {
 
   // Instance of Google Sheets API
   const googleSheets = google.sheets({ version: "v4", auth: client });
-  const spreadsheetId = "1ZGE0jKyH5F-Z5vDSKzqo_e9eM4z6PDzkohI1MMly5to"; //read
+  const spreadsheetId = "13qsJQfZKObMCXk5SVcoty8jl6dp3M5puYhsUKn2YvmE"; //read
   const metaData = await googleSheets.spreadsheets.get({
     auth,
     spreadsheetId,
@@ -100,7 +100,7 @@ router.get("/", async (req, res) => {
 
     // Write row(s) to spreadsheet
     // const spreadsheetId = '1WuNzHrE9B4UIgtx5jLpcYyYMo_XyoRZVqL_lNv46ehQ' // write;
-    const spreadsheetId = "1ZGE0jKyH5F-Z5vDSKzqo_e9eM4z6PDzkohI1MMly5to"; //Update
+    const spreadsheetId = "13qsJQfZKObMCXk5SVcoty8jl6dp3M5puYhsUKn2YvmE"; //Update
     if (!customerData.length) {
       await getRows();
     }
