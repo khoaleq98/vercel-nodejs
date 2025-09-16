@@ -104,7 +104,7 @@ router.get("/", async (req, res) => {
     if (!customerData.length) {
       await getRows();
     }
-    const checkinPass = 'ademax_event'
+    const checkinPass = 'ademax'
     if (password.trim().toLowerCase() != checkinPass.trim().toLowerCase()) {
       console.log('password in valid: user id: ', id)
       return res.status(400).send('Id Hoặc mật khẩu không đúng')
